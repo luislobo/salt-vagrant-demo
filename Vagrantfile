@@ -6,20 +6,28 @@ VAGRANTFILE_API_VERSION = "2"
 
 Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
   os = "bento/ubuntu-18.04"
-  net_ip = "192.168.50"
+  net_ip = "172.17.53"
+  config.vm.provider "hyperv"
+  config.vm.synced_folder ".", "/vagrant", type: "rsync"
+  
+  config.vm.provider "hyperv" do |h|
+    h.enable_virtualization_extensions = true
+    h.linked_clone = true
+  end
 
   config.vm.define :master, primary: true do |master_config|
-    master_config.vm.provider "virtualbox" do |vb|
-        vb.memory = "2048"
-        vb.cpus = 1
-        vb.name = "master"
+    master_config.vm.provider "hyperv" do |h|
+      h.memory = "2048"
+      h.cpus = 1
+      h.enable_virtualization_extensions = true
+      h.linked_clone = true
     end
     
     master_config.vm.box = "#{os}"
     master_config.vm.host_name = 'saltmaster.local'
     master_config.vm.network "private_network", ip: "#{net_ip}.10"
-    master_config.vm.synced_folder "saltstack/salt/", "/srv/salt"
-    master_config.vm.synced_folder "saltstack/pillar/", "/srv/pillar"
+    master_config.vm.synced_folder "saltstack/salt/", "/srv/salt", type: "rsync"
+    master_config.vm.synced_folder "saltstack/pillar/", "/srv/pillar", type: "rsync"
 
     master_config.vm.provision :salt do |salt|
       salt.master_config = "saltstack/etc/master"
@@ -47,10 +55,11 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
     ["minion2",    "#{net_ip}.12",    "1024",    os ],
   ].each do |vmname,ip,mem,os|
     config.vm.define "#{vmname}" do |minion_config|
-      minion_config.vm.provider "virtualbox" do |vb|
-          vb.memory = "#{mem}"
-          vb.cpus = 1
-          vb.name = "#{vmname}"
+      minion_config.vm.provider "hyperv" do |h|
+        h.memory = "#{mem}"
+        h.cpus = 1
+        h.enable_virtualization_extensions = true
+        h.linked_clone = true
       end
 
       minion_config.vm.box = "#{os}"
