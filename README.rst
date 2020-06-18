@@ -8,18 +8,18 @@ A Salt Demo using Vagrant.
 Instructions
 ============
 
-Run the following commands in a terminal. Git, VirtualBox and Vagrant must
+Run the following commands in a terminal. Git, Hyper-V and Vagrant must
 already be installed.
 
 .. code-block:: bash
 
     git clone https://github.com/UtahDave/salt-vagrant-demo.git
     cd salt-vagrant-demo
-    vagrant plugin install vagrant-vbguest
+    vagrant plugin install vagrant-reload
     vagrant up
 
 
-This will download an Ubuntu  VirtualBox image and create three virtual
+This will download an Ubuntu  Hyper-V image and create three Hyper-V
 machines for you. One will be a Salt Master named `master` and two will be Salt
 Minions named `minion1` and `minion2`.  The Salt Minions will point to the Salt
 Master and the Minion's keys will already be accepted. Because the keys are
