@@ -13,10 +13,9 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
     trigger.info = "Creating 'NATSwitch' Hyper-V switch if it does not exist..."
     trigger.run = {privileged: "true", powershell_elevated_interactive: "true", path: "./scripts/create-nat-hyperv-switch.ps1"}
   end
-
+  
   config.vm.provider "hyperv"
   config.vm.synced_folder ".", "/vagrant", type: "rsync"
-
   
   config.vm.provider "hyperv" do |h|
     h.enable_virtualization_extensions = true
@@ -24,10 +23,6 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
   end
 
   config.vm.define :master, primary: true do |master_config|
-    vm_exists = system("powershell.exe", "-Command", "Get-VM -VMNAME master -ErrorAction SilentlyContinue | out-null")
-    if !vm_exists
-      master_config.vm.network "public_network", bridge: "Default Switch"
-    end
 
     master_config.vm.provider "hyperv" do |h|
       h.memory = "2048"
@@ -37,7 +32,7 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
       h.vmname = "master"
     end
 
-    # Configure Vagrant Reload Trigger
+    # Reconfigure Hyper-V on before reload to the NATSwitch
     master_config.trigger.before :reload do |trigger|
       trigger.info = "Setting master Hyper-V switch to 'NATSwitch' to allow for static IP..."
       trigger.run = {privileged: "true", powershell_elevated_interactive: "true", path: "./scripts/set-hyperv-switch.ps1", args: 'master' }
@@ -47,6 +42,7 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
     master_config.vm.host_name = 'saltmaster.local'
     master_config.vm.provision "shell", path: "./scripts/configure-static-ip.sh", args: "#{net_ip}.10"
     master_config.vm.provision :reload
+    
     master_config.vm.synced_folder "saltstack/salt/", "/srv/salt", type: "rsync"
     master_config.vm.synced_folder "saltstack/pillar/", "/srv/pillar", type: "rsync"
 
@@ -77,14 +73,9 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
   ].each do |vmname,ip,mem,os|
     config.vm.define "#{vmname}" do |minion_config|
 
-      vm_exists = system("powershell.exe", "-Command", "Get-VM -VMNAME #{vmname} -ErrorAction SilentlyContinue | out-null")
-      if !vm_exists
-        minion_config.vm.network "public_network", bridge: "Default Switch"
-      end
-
       # Configure Vagrant Reload Trigger
       minion_config.trigger.before :reload do |trigger|
-        trigger.info = "Setting master Hyper-V switch to 'NATSwitch' to allow for static IP..."
+        trigger.info = "Setting #{vmname} Hyper-V switch to 'NATSwitch' to allow for static IP..."
         trigger.run = {privileged: "true", powershell_elevated_interactive: "true", path: "./scripts/set-hyperv-switch.ps1", args: "#{vmname}" }
       end
     
