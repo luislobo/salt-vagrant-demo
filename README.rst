@@ -1,35 +1,8 @@
-=================
-Salt Vagrant Demo
-=================
+Requires patches to fix error 
+```
+AttributeError: /usr/lib/x86_64-linux-gnu/libcrypto.so.1.1: undefined symbol: OPENSSL_no_config
+```
 
-A Salt Demo using Vagrant.
+https://github.com/saltstack/salt/pull/37772/files
 
-
-Instructions
-============
-
-Run the following commands in a terminal. Git, Hyper-V and Vagrant must
-already be installed.
-
-.. code-block:: bash
-
-    git clone https://github.com/UtahDave/salt-vagrant-demo.git
-    cd salt-vagrant-demo
-    vagrant plugin install vagrant-reload
-    vagrant up
-
-
-This will download an Ubuntu  Hyper-V image and create three Hyper-V
-machines for you. One will be a Salt Master named `master` and two will be Salt
-Minions named `minion1` and `minion2`.  The Salt Minions will point to the Salt
-Master and the Minion's keys will already be accepted. Because the keys are
-pre-generated and reside in the repo, please be sure to regenerate new keys if
-you use this for production purposes.
-
-You can then run the following commands to log into the Salt Master and begin
-using Salt.
-
-.. code-block:: bash
-
-    vagrant ssh master
-    sudo salt \* test.ping
+Patch the file located in `nano /usr/lib/python2.7/dist-packages/salt/utils/rsax931.py`
